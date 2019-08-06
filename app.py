@@ -77,10 +77,16 @@ def tobs():
     return jsonify(results)
 
 @app.route("/api/v1.0/<start>")
-def calc_temps(start_date, end_date):
+def calc_temps(start):
     """TMIN, TAVG, and TMAX for a list of dates"""
-    session = Session(engine)
-    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start_date).all()    
+    
+    canonicalized = start.replace(" ", "").lower()
+    for date in Measurement:
+        search_term = date["date"].replace(" ", "").lower()
+
+        if search_term == canonicalized:
+           session = Session(engine)
+           results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start_date).all()    
     
     return jsonify(results)
 
