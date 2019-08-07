@@ -40,7 +40,7 @@ def home():
         f"/api/v1.0/precipitation <br/>"
         f"/api/v1.0/stations <br/>"
         f"/api/v1.0/tobs <br/>"
-        f"/api/v1.0/start/<start> <br/>"
+        f"/api/v1.0/start<start> <br/>"
         f"/api/v1.0/start/end/<start>/<end>"
     )
 @app.route("/api/v1.0/precipitation")
@@ -80,8 +80,8 @@ def tobs():
 def temps(start):
     """TMIN, TAVG, and TMAX for a list of dates"""
     session = Session(engine)
-    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date > start).all()    
-    
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date > start).group_by(Measurement.date).all()    
+    # Create a dictionary from the row data and append to a list of all precipitation in date range  
     start_list = []
     for date in results:
         start_dict = {}
@@ -90,15 +90,14 @@ def temps(start):
         start_dict["Avg Temp"] = date[2]
         start_dict["Max Temp"] = date[3]
         start_list.append(start_dict)
-        session.commit()
-    
+
     return jsonify(start_list)
 
 @app.route("/api/v1.0/start/end/<start>/<end>")
 def start_end(start, end):
     """TMIN, TAVG, and TMAX for a list of dates"""
     session = Session(engine)
-    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date > start).filter(Measurement.date < end).all()    
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date > start).filter(Measurement.date < end).group_by(Measurement.date).all()    
     
     start_list = []
     for date in results:
