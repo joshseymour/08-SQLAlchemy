@@ -35,13 +35,13 @@ app = Flask(__name__)
 @app.route("/")
 def home():
     return (
-        f"Welcome to the Precipitation API!<br/>"
-        f"Below are your available routes:<br/>"
-        f"/api/v1.0/precipitation<br/>"
-        f"/api/v1.0/stations<br/>"
-        f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start>/<end>"
+        f"Welcome to the Precipitation API! <br/>"
+        f"Below are your available routes: <br/>"
+        f"/api/v1.0/precipitation <br/>"
+        f"/api/v1.0/stations <br/>"
+        f"/api/v1.0/tobs <br/>"
+        f"/api/v1.0/start/<start> <br/>"
+        f"/api/v1.0/start/end/<start>/<end>"
     )
 @app.route("/api/v1.0/precipitation")
 def precipitation():
@@ -54,8 +54,8 @@ def precipitation():
     all_precipitation = []
     for date, prcp in results:
         precipitation_dict = {}
-        precipitation_dict["date"] = date
-        precipitation_dict["prcp"] = prcp
+        precipitation_dict["Date"] = date
+        precipitation_dict["Participation"] = prcp
         all_precipitation.append(precipitation_dict)
     
     return jsonify(all_precipitation)
@@ -76,19 +76,42 @@ def tobs():
         
     return jsonify(results)
 
-@app.route("/api/v1.0/<start>")
-def calc_temps(start):
+@app.route("/api/v1.0/start/<start>")
+def temps(start):
     """TMIN, TAVG, and TMAX for a list of dates"""
+    session = Session(engine)
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date > start).all()    
     
-    canonicalized = start.replace(" ", "").lower()
-    for date in Measurement:
-        search_term = date["date"].replace(" ", "").lower()
+    start_list = []
+    for date in results:
+        start_dict = {}
+        start_dict["Date"] = date[0]
+        start_dict["Min Temp"] = date[1]
+        start_dict["Avg Temp"] = date[2]
+        start_dict["Max Temp"] = date[3]
+        start_list.append(start_dict)
+        session.commit()
+    
+    return jsonify(start_list)
 
-        if search_term == canonicalized:
-           session = Session(engine)
-           results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start_date).all()    
+@app.route("/api/v1.0/start/end/<start>/<end>")
+def start_end(start, end):
+    """TMIN, TAVG, and TMAX for a list of dates"""
+    session = Session(engine)
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date > start).filter(Measurement.date < end).all()    
     
-    return jsonify(results)
+    start_list = []
+    for date in results:
+        start_dict = {}
+        start_dict["Date"] = date[0]
+        start_dict["Min Temp"] = date[1]
+        start_dict["Avg Temp"] = date[2]
+        start_dict["Max Temp"] = date[3]
+        start_list.append(start_dict)
+        session.commit()
+    
+    return jsonify(start_list)
+
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
