@@ -64,17 +64,31 @@ def precipitation():
 def stations():
     """Return the stations as a json"""
     session = Session(engine)
-    results = session.query(Stations.station).all()
-        
-    return jsonify(results)
+    results = session.query(Stations.station, Stations.name).all()
+
+    station_list = []
+    for station, name in results:
+        station_dict = {}
+        station_dict["Station"] = station
+        station_dict["Name"] = name
+        station_list.append(station_dict)
+
+    return jsonify(station_list)
 
 @app.route("/api/v1.0/tobs")
 def tobs():
-    """Return the tempurature observations as a json"""
+    """Return the tempurature observations for a year (2017-08-23 to 2016-08-23) as a json"""
     session = Session(engine)
     results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date <= '2017-08-23').filter(Measurement.date > '2016-08-23').all()
-        
-    return jsonify(results)
+    
+    tobs_list = []
+    for date, tobs in results:
+        tobs_dict = {}
+        tobs_dict["Date"] = date
+        tobs_dict["Tempurature"] = tobs
+        tobs_list.append(tobs_dict)
+
+    return jsonify(tobs_list)
 
 @app.route("/api/v1.0/start/<start>")
 def temps(start):
